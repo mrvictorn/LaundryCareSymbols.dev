@@ -1,0 +1,1 @@
+<li><a href="#idTab669_" class="idTabHrefShort">{l s='Laundry Care Symbols' mod='laundrycaresymbols'}</a></li>

@@ -30,13 +30,18 @@ if (!defined('_PS_VERSION_'))
 class LaundryCareSymbols extends Module
 {
 	protected $config_form = false;
-
+    protected static $arrCareGroups =  array('washing','bleaching','drying','ironing','cleaning'); 
+    protected static $arrLaundryCareSymbols =  array('washing' => array("wh-washing","wh-washing-hand","wh-washing-30deg") ,
+                                                    'bleaching' => array("wh-bleaching","wh-bleaching-non-chlorine","wh-bleaching-not-allowed"),    
+                                                    'drying' => array("wh-drying","wh-drying-tumble-low-heat","wh-drying-tumble-medium-heat","wh-drying-not-allowed"),
+                                                    'ironing' => array("wh-iron","wh-iron-low","wh-iron-medium","wh-iron-not-allowed"),
+                                                    'cleaning' => array("wh-drycleaning","wh-drycleaning-a","wh-drycleaning-f"));
 	public function __construct()
 	{
 		$this->name = 'laundrycaresymbols';
 		$this->tab = 'front_office_features';
 		$this->version = '1.0.0';
-		$this->author = 'Media Atlantis Group';
+		$this->author = 'Viktor Nesterenko';
 		$this->need_instance = 1;
 
 		/**
@@ -110,7 +115,10 @@ public function install()
 
     private function getSymbolsForProduct($productId)
     {
+
     	//todo: return array of symbols codes  for $productId
+        // for debug temp return
+        return array("wh-washing","wh-bleaching","wh-iron-medium","wh-drycleaning-a","wh-drying-not-allowed");
     }
 
     private function setSymbolsForProduct($productId,$arrSymbolsCodes)
@@ -135,51 +143,38 @@ public function install()
 
     public function hookProductTabContent($params)
     {
-        $id_product = Tools::getValue('id_product');
-
-        $this->context->smarty->assign(array(
-            'posts' => $posts,
-            'is_16' => (bool)(version_compare(_PS_VERSION_, '1.6.0', '>=') === true),
-            'blogLayout' => Configuration::get('PH_BLOG_LAYOUT')
-        ));
-
         return $this->display(__FILE__, 'product-tab-content.tpl');
     }
 
     public function hookDisplayAdminProductsExtra()
     {
-        
-        if(!Module::isInstalled('ph_simpleblog') || !Module::isEnabled('ph_simpleblog'))
-            return;
-
         $product = new Product(Tools::getValue('id_product'), false, $this->context->cookie->id_lang);
-
-        $posts = SimpleBlogPost::getSimplePosts($this->context->language->id);
-
-        $selected_posts = array();
-        $related_posts = array();
-
-        foreach(SimpleBlogRelatedPost::getByProductId($product->id) as $key => $post)
-        {
-            $related_posts[] = $post['id_simpleblog_post'];
-        }
-
-        if(sizeof($related_posts) > 0)
-        {
-            $posts = SimpleBlogPost::getSimplePosts($this->context->language->id, null, null, 'NOT IN', $related_posts);
-            $selected_posts = SimpleBlogPost::getSimplePosts($this->context->language->id, null, null, 'IN', $related_posts);
-        }
-
+        $selected_symbols = array();
+       
         $this->context->smarty->assign(array(
             'product' => $product,
-            'posts' => $posts,
-            'selected_posts' => $selected_posts,
-            'module_path' => $this->_path,
-            'secure_key' => $this->secure_key,
-            'is_16' => (bool)(version_compare(_PS_VERSION_, '1.6.0', '>=') === true)
+            'allLaundryCareSymbols' => $arrLaundryCareSymbols,
+            'module_path' => $this->_path
         ));
         
         return $this->display(__FILE__, 'admin-tab.tpl');
+    }
+
+    public function hookBackOfficeHeader()
+    {
+        //$this->context->controller->addJS($this->_path.'js/back.js');
+        $this->context->controller->addCSS($this->_path.'css/styles.css');
+        $this->context->controller->addCSS($this->_path.'css/back.css');
+    }
+
+    /**
+     * Add the CSS & JavaScript files you want to be added on the FO.
+     */
+    public function hookHeader()
+    {
+        //$this->context->controller->addJS($this->_path.'/js/front.js');
+        $this->context->controller->addCSS($this->_path.'css/styles.css');
+        $this->context->controller->addCSS($this->_path.'/css/front.css');
     }
 
 }
